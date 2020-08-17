@@ -9,6 +9,7 @@ class CPU:
         """Construct a new CPU."""
         self.PC = 0
         self.IR = None
+        self.FL = None
         self.ram = [None] * 256
         self.reg = [0] * 8
         self.running = False 
@@ -23,7 +24,11 @@ class CPU:
         self.functionDict[0b01000110] = self.pop
         self.functionDict[0b1010000] = self.call
         self.functionDict[0b00010001] = self.ret
-        self.functionDict[0b10100000] = self.add
+        self.functionDict[0b10100000] = "ADD"
+        self.functionDict[0b10100111] = "CMP"
+        self.functionDict[0b01010101] = self.jeq
+        self.functionDict[0b01010110] = self.jne
+        self.functionDict[0b01010100] = self.jmp
 
 
     def load(self):
@@ -48,10 +53,23 @@ class CPU:
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
+        op = self.functionDict[op]
         if op == "ADD":
             print(f"In ALU Adding {self.reg[reg_a]} with {self.reg[reg_b]}")
             self.reg[reg_a] += self.reg[reg_b]
         #elif op == "SUB": etc
+        elif op == "CMP":
+            print("Running CMP")
+            val1 = self.reg[reg_a]
+            val2 = self.reg[reg_b]
+            if val1 == val2:
+                self.FL = 0b1
+            elif val1 > val2:
+                self.FL = 0b10
+            elif val2 > val1:
+                self.FL = 0b100
+            print("CMP done")
+            self.PC += 3
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -87,8 +105,18 @@ class CPU:
         
         while self.running:
             self.IR = self.ram_read(self.PC) 
+            operand_a = self.ram_read(self.PC + 1)
+            operand_b = self.ram_read(self.PC + 2)
             print(f'Running instruction {bin(self.IR)}')
-            self.functionDict[self.IR]()
+            is_alu_command = (self.IR >> 5) & 0b001
+            
+            if is_alu_command:
+                print("running ALU")
+                self.alu(self.IR, operand_a, operand_b)
+            
+            else:
+                print("running func")
+                self.functionDict[self.IR]()
 
     def hlt(self):
         print("Halting..")
