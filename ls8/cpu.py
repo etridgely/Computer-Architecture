@@ -131,7 +131,7 @@ class CPU:
 
     def prn(self):
         operand_a = self.ram_read(self.PC+1)
-        print(f"PRN {self.reg[operand_a]}")
+        print(f"\nPRN====== {self.reg[operand_a]}\n")
         self.PC += 2
 
     def mul(self):
@@ -145,7 +145,6 @@ class CPU:
 
     def push(self):
         operand_a = self.ram_read(self.PC + 1)
-      
         self.reg[7] -= 1
         value = self.reg[operand_a]
         SP = self.reg[7]
@@ -179,8 +178,24 @@ class CPU:
         print(f'Setting PC to {value}')
         self.PC = value
 
-    def add(self):
+    def jeq(self):
         operand_a = self.ram_read(self.PC + 1)
-        operand_b = self.ram_read(self.PC + 2)
-        self.alu("ADD", operand_a, operand_b)
-        self.PC += 3
+        is_equal = self.FL & 1
+        if is_equal:
+            print(f"JEQ Jumping to {self.reg[operand_a]}")
+            self.PC = self.reg[operand_a]
+        else: 
+            self.PC += 2
+
+    def jne(self):
+        operand_a = self.ram_read(self.PC + 1)
+        if self.FL & 1 is 0:
+            print(f"JNE Jumping to {self.reg[operand_a]}")
+            self.PC = self.reg[operand_a]
+        else: 
+            self.PC += 2
+
+    def jmp(self):
+        operand_a = self.ram_read(self.PC + 1)
+        print(f"JMP Jumping to {self.reg[operand_a]}")
+        self.PC = self.reg[operand_a]
